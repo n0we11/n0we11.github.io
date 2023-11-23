@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="格式化字符串漏洞的不解1.偏移量（首地址偏移）与函数参数的调用&emsp;&emsp;在做这类题的时候，经常会有这样的操作：输入AAAA(或AAAAAAAA)-%x-%x-%x-%x-%x-%x-%x-%x-%x…,然后通过程序输出中的AAAA的二次出现，来确定这个“偏移量”。&emsp;&emsp;我对这个“偏移量”的不理解的主要原因是忽略了：原来printf也是个函数！父函数中又调用了prin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="格式化字符串漏洞的不解">
+<meta property="og:url" content="http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="格式化字符串漏洞的不解1.偏移量（首地址偏移）与函数参数的调用&emsp;&emsp;在做这类题的时候，经常会有这样的操作：输入AAAA(或AAAAAAAA)-%x-%x-%x-%x-%x-%x-%x-%x-%x…,然后通过程序输出中的AAAA的二次出现，来确定这个“偏移量”。&emsp;&emsp;我对这个“偏移量”的不理解的主要原因是忽略了：原来printf也是个函数！父函数中又调用了prin">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="c:\Users\hp\Desktop\format_str.png">
+<meta property="article:published_time" content="2023-04-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-11-23T12:55:24.319Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="c:\Users\hp\Desktop\format_str.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>格式化字符串漏洞的不解</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.0.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2023/09/07/%E5%A0%86%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/01/11/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E4%B8%8E%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A832%E4%BD%8D%E4%B8%8E64%E4%BD%8D%E7%9A%84%E5%8C%BA%E5%88%AB/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&text=格式化字符串漏洞的不解"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&is_video=false&description=格式化字符串漏洞的不解"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=格式化字符串漏洞的不解&body=Check out this article: http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&name=格式化字符串漏洞的不解&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&t=格式化字符串漏洞的不解"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">格式化字符串漏洞的不解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%81%8F%E7%A7%BB%E9%87%8F%EF%BC%88%E9%A6%96%E5%9C%B0%E5%9D%80%E5%81%8F%E7%A7%BB%EF%BC%89%E4%B8%8E%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E7%9A%84%E8%B0%83%E7%94%A8"><span class="toc-number">1.0.1.</span> <span class="toc-text">1.偏移量（首地址偏移）与函数参数的调用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-n%E7%9A%84%E5%BA%94%E7%94%A8%EF%BC%88%E8%A6%86%E5%86%99%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%EF%BC%89"><span class="toc-number">1.0.2.</span> <span class="toc-text">2.%n的应用（覆写任意地址）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-pwntools%E9%87%8C%E7%9A%84FmtStr%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B1%BB"><span class="toc-number">1.0.3.</span> <span class="toc-text">3.pwntools里的FmtStr格式化字符串类</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%BB%95%E8%BF%87canary"><span class="toc-number">1.0.4.</span> <span class="toc-text">4.格式化字符串绕过canary</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99"><span class="toc-number">1.0.5.</span> <span class="toc-text">5.任意地址写</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        格式化字符串漏洞的不解
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-04-10T16:00:00.000Z" class="dt-published" itemprop="datePublished">2023-04-11</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="格式化字符串漏洞的不解"><a href="#格式化字符串漏洞的不解" class="headerlink" title="格式化字符串漏洞的不解"></a>格式化字符串漏洞的不解</h2><h4 id="1-偏移量（首地址偏移）与函数参数的调用"><a href="#1-偏移量（首地址偏移）与函数参数的调用" class="headerlink" title="1.偏移量（首地址偏移）与函数参数的调用"></a>1.偏移量（首地址偏移）与函数参数的调用</h4><p>&emsp;&emsp;在做这类题的时候，经常会有这样的操作：输入AAAA(或AAAAAAAA)-%x-%x-%x-%x-%x-%x-%x-%x-%x…,然后通过程序输出中的AAAA的二次出现，来确定这个“偏移量”。<br>&emsp;&emsp;我对这个“偏移量”的不理解的主要原因是忽略了：原来printf也是个函数！父函数中又调用了printf这个子函数，所以在原来的父函数开辟的栈帧上会在开辟一个新的属于printf函数的栈。而AAAA既做为printf的函数，又作为父函数的输入参数。所以，可以如下拙略的图示：<br><img src="C:\Users\hp\Desktop\format_str.png"></p>
+<p>&emsp;&emsp;这里感觉还得给自己强化一下这个函数的传参,以这个为例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;AAAA,%d,%c,%s&quot;</span>,a,b,c);</span><br></pre></td></tr></table></figure>
+
+<p>printf函数的参数应从右往左依次入栈c,b,a依次入栈，虽然printf参数可变，但有一点不变，就是它起码有一个参数，那就是它要打印的字符串，也就是AAAA，但其实printf函数的第一个参数并不是字符串本身，而是该字符串的地址，真正的字符串并不存在栈里。</p>
+<h4 id="2-n的应用（覆写任意地址）"><a href="#2-n的应用（覆写任意地址）" class="headerlink" title="2.%n的应用（覆写任意地址）"></a>2.%n的应用（覆写任意地址）</h4><p>&emsp;&emsp;一般利用%n来修改参数里的内容，由此可以将未知变为已知。它的定义是：%n,不输出字符，但是把已经成功输出的字符个数写入对应的整型指针参数所指的变量。用法形如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">...[overwrite addr]....%[overwrite offset]$n</span><br></pre></td></tr></table></figure>
+
+<p>其中… 表示我们的填充内容，overwrite addr 表示我们所要覆盖的地址，overwrite offset 地址表示我们所要覆盖的地址存储的位置为输出函数的格式化字符串的第几个参数。一般操作步骤：确定覆盖地址、确定相对偏移、进行覆盖。这里我们所要覆盖的地址就相当于AAAA，而我们以确定其在第n个参数的位置，则只控制n之前的填充内容（包括所要写入的地址）相当于几个字符，就可将几写入该地址。<br>&emsp;&emsp;注：%n是写入目标空间4字节，%hn是写入目标空间2字节，%hhn是写入目标空间1字节，%lln是写入目标空间8字节。</p>
+<h4 id="3-pwntools里的FmtStr格式化字符串类"><a href="#3-pwntools里的FmtStr格式化字符串类" class="headerlink" title="3.pwntools里的FmtStr格式化字符串类"></a>3.pwntools里的FmtStr格式化字符串类</h4><p>&emsp;&emsp;格式化字符串漏洞如果要修改某个内存地址的内容常常需要构造比较长的payload,而pwntools里的FmtStr格式化字符串类可以大大简便该工作</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmtstr_payload(offset, writes, numbwritten=<span class="number">0</span>, write_size=<span class="string">&#x27;byte&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>第一个参数表示格式化字符串的偏移；<br>第二个参数表示需要利用%n写入的数据，采用字典形式，如我们要将printf的GOT数据改为system函数地址，就写成</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;printfGOT: systemAddress&#125;；</span><br></pre></td></tr></table></figure>
+
+<p>第三个参数表示已经输出的字符个数；<br>第四个参数表示写入方式，是按字节（byte）、按双字节（short）还是按四字节（int），对应着hhn、hn和n，默认值是byte，即按hhn写。<br>其返回值即为payload<br>其常用的形式是:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmtstr_payload(offset,&#123;address1:value1&#125;)</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-格式化字符串绕过canary"><a href="#4-格式化字符串绕过canary" class="headerlink" title="4.格式化字符串绕过canary"></a>4.格式化字符串绕过canary</h4><p>​        计算buf与canary偏移+6即为canary偏移（6为参数寄存器数量，64位程序函数的参数获取方式为寄存器与栈相结合；32位只用栈）。</p>
+<h4 id="5-任意地址写"><a href="#5-任意地址写" class="headerlink" title="5.任意地址写"></a>5.任意地址写</h4><p>​		%{number}c表示写入的数，%{index}$n表示偏移index位置的值为地址写入，n写入四字节，hn写入两字节，hhn写入单字节。</p>
+<ul>
+<li><p>%12c%7$hhn这里我们没有另外传入地址，表示将偏移为7的值作为地址，在该地址处写入单字节的内容0xc</p>
+</li>
+<li><p>p32(0x80480045)+b&quot;%12c%7$hhn&quot;假设偏移为7的地方是字符串的第一个参数，此时的表达式为将0x80480045处的单字节改写为0xc；同样值得注意的是如果是64位程序，应将地址放在格式化表达式的后面，对应的偏移也需要修改。</p>
+</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">格式化字符串漏洞的不解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%81%8F%E7%A7%BB%E9%87%8F%EF%BC%88%E9%A6%96%E5%9C%B0%E5%9D%80%E5%81%8F%E7%A7%BB%EF%BC%89%E4%B8%8E%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E7%9A%84%E8%B0%83%E7%94%A8"><span class="toc-number">1.0.1.</span> <span class="toc-text">1.偏移量（首地址偏移）与函数参数的调用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-n%E7%9A%84%E5%BA%94%E7%94%A8%EF%BC%88%E8%A6%86%E5%86%99%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%EF%BC%89"><span class="toc-number">1.0.2.</span> <span class="toc-text">2.%n的应用（覆写任意地址）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-pwntools%E9%87%8C%E7%9A%84FmtStr%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B1%BB"><span class="toc-number">1.0.3.</span> <span class="toc-text">3.pwntools里的FmtStr格式化字符串类</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%BB%95%E8%BF%87canary"><span class="toc-number">1.0.4.</span> <span class="toc-text">4.格式化字符串绕过canary</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99"><span class="toc-number">1.0.5.</span> <span class="toc-text">5.任意地址写</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&text=格式化字符串漏洞的不解"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&is_video=false&description=格式化字符串漏洞的不解"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=格式化字符串漏洞的不解&body=Check out this article: http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&title=格式化字符串漏洞的不解"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&name=格式化字符串漏洞的不解&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/04/11/%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E%E7%9A%84%E4%B8%8D%E8%A7%A3/&t=格式化字符串漏洞的不解"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

